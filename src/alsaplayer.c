@@ -322,7 +322,11 @@ void mixer_init(alsaplayer_ctx *ctx) {
 	snd_mixer_selem_id_set_name(sid, ctx->mixer);
 	ctx->mixer_elem = snd_mixer_find_selem(ctx->mixer_handle, sid);
 
-	snd_mixer_selem_get_playback_volume_range(ctx->mixer_elem, &ctx->mixer_min, &ctx->mixer_max);
+	if (ctx->mixer_elem)
+		snd_mixer_selem_get_playback_volume_range(ctx->mixer_elem, &ctx->mixer_min, &ctx->mixer_max);
+	else {
+		log_error("could not initialize mixer %s. Continuing with bogus volume values. You will not be able to control the volume\n.", ctx->mixer);
+	}
 }
 
 void mixer_uninit(alsaplayer_ctx *ctx) {
@@ -332,17 +336,21 @@ void mixer_uninit(alsaplayer_ctx *ctx) {
 
 uint8_t obtain_volume(alsaplayer_ctx *ctx) {
 	long volume = 0;
+	uint8_t ret = 100;
 	mixer_init(ctx);
-	snd_mixer_selem_get_playback_volume(ctx->mixer_elem, SND_MIXER_SCHN_MONO, &volume);
+	if (ctx->mixer_elem) {
+		snd_mixer_selem_get_playback_volume(ctx->mixer_elem, SND_MIXER_SCHN_MONO, &volume);
+		ret = (uint8_t)(round((double)volume * 100 / ctx->mixer_max));
+		log_debug("Obtained volume (raw): %d\n", ret);
+	}
 	mixer_uninit(ctx);
-	uint8_t ret = (uint8_t)(round((double)volume * 100 / ctx->mixer_max));
-	log_debug("Obtained volume (raw): %d\n", ret);
 	return ret;
 }
 
 void adjustVolume(alsaplayer_ctx *ctx, uint8_t volume) {
 	mixer_init(ctx);
-	snd_mixer_selem_set_playback_volume_all(ctx->mixer_elem, volume * ctx->mixer_max / 100);
+	if (ctx->mixer_elem)
+		snd_mixer_selem_set_playback_volume_all(ctx->mixer_elem, volume * ctx->mixer_max / 100);
 	mixer_uninit(ctx);
 }
 
