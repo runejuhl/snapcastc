@@ -5,6 +5,6 @@ BUILD_DEPS="$(perl -ne 'next if /^#/; $p=(s/^Build-Depends:\s*/ / or (/^ / and $
 cat <<EOF > Dockerfile
 FROM debian
 RUN apt-get update && apt-get install -y crossbuild-essential-armhf $BUILD_DEPS
-RUN apt-get install -y -aarmhf $BUILD_DEPS
+RUN apt-get -a armhf install -y  $BUILD_DEPS
 CMD ['make']
 EOF
