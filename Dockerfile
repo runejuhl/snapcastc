@@ -1,6 +1,25 @@
-FROM debian
+FROM debian AS build
 
-RUN apt-get update && apt-get install -y  librubberband-dev alsa-utils gcc-6 libasound2-dev libopus-dev build-essential git libjson-c-dev libsoxr-dev cmake devscripts
+RUN apt-get update && \
+  apt-get install -y  \
+  alsa-utils          \
+  build-essential     \
+  cmake               \
+  devscripts          \
+  gcc-6               \
+  git                 \
+  libasound2-dev      \
+  libjson-c-dev       \
+  libopus-dev         \
+  librubberband-dev   \
+  libsoxr-dev
 
-CMD ['make']
+RUN git clone https://github.com/christf/snapcastc.git /snapcastc
+WORKDIR /snapcastc
 
+RUN cd /snapcastc && \
+  mkdir build && \
+  cd build && \
+  cmake .. && \
+  make -j5 && \
+  make install
