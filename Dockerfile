@@ -23,3 +23,17 @@ RUN cd /snapcastc && \
   cmake .. && \
   make -j5 && \
   make install
+
+FROM debian AS run
+
+COPY --from=build /usr/local/bin/snapcast* /usr/local/bin/
+
+RUN apt-get update && \
+  apt-get install -y  \
+  libjson-c3          \
+  libopus0            \
+  librubberband2      \
+  libsoxr0            \
+  libasound2
+
+RUN rm -rf /var/cache/*
